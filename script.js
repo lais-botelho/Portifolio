@@ -1,138 +1,141 @@
 /* ==========================================================================
-   SCRIPT PRINCIPAL - PORTFÓLIO LAIS BOTELHO
-   Focus: Manipulação DOM, Dark/Light Mode, Animações e Responsividade
+   PORTFÓLIO LAIS BOTELHO - LÓGICA E INTERATIVIDADE (JAVASCRIPT VANILLA)
    ========================================================================== */
 
-document.addEventListener('DOMContentLoaded', () => {
-
-    /* ----------------------------------------------------------------------
-       1. CONTROLE DO TEMA (DARK MODE / LIGHT MODE)
-       ---------------------------------------------------------------------- */
-    const botaoTema = document.getElementById('botao-tema');
-    const iconeTema = document.getElementById('icone-tema');
+// Espera a carga completa do DOM antes de rodar os scripts
+document.addEventListener("DOMContentLoaded", () => {
     
-    // Verifica a preferência salva no LocalStorage ou do sistema
-    const temaSalvo = localStorage.getItem('tema');
-    if (temaSalvo) {
-        document.documentElement.setAttribute('data-tema', temaSalvo);
-        atualizarIconeTema(temaSalvo === 'dark');
-    }
+    /* 1. SELEÇÃO DE ELEMENTOS DO DOM */
+    const elementoCorpo = document.body;
+    const botaoAlternarTema = document.getElementById("botao-tema");
+    const botaoMenuHamburguer = document.getElementById("botao-menu-hamburguer");
+    const menuNavegacao = document.getElementById("navegacao-menu");
+    const linksNavegacao = document.querySelectorAll(".link-navegacao");
+    const botaoVoltarTopo = document.getElementById("botao-topo");
+    const elementoAnoAtual = document.getElementById("ano-atual");
+    const elementoTextoMaquina = document.getElementById("texto-maquina-escrever");
 
+    /* 2. FUNCIONALIDADE: ALTERNÂNCIA DE TEMA (DARK / LIGHT MODE) */
     function alternarTema() {
-        const temaAtual = document.documentElement.getAttribute('data-tema');
-        const novoTema = temaAtual === 'dark' ? 'light' : 'dark';
-        
-        document.documentElement.setAttribute('data-tema', novoTema);
-        localStorage.setItem('tema', novoTema);
-        
-        atualizarIconeTema(novoTema === 'dark');
-    }
-
-    function atualizarIconeTema(isDark) {
-        if (isDark) {
-            iconeTema.classList.remove('bi-moon-stars-fill');
-            iconeTema.classList.add('bi-sun-fill');
+        if (elementoCorpo.classList.contains("tema-escuro")) {
+            elementoCorpo.classList.remove("tema-escuro");
+            elementoCorpo.classList.add("tema-claro");
+            localStorage.setItem("pref-tema", "tema-claro");
         } else {
-            iconeTema.classList.remove('bi-sun-fill');
-            iconeTema.classList.add('bi-moon-stars-fill');
+            elementoCorpo.classList.remove("tema-claro");
+            elementoCorpo.classList.add("tema-escuro");
+            localStorage.setItem("pref-tema", "tema-escuro");
         }
     }
 
-    botaoTema.addEventListener('click', alternarTema);
-
-
-    /* ----------------------------------------------------------------------
-       2. MENU HAMBÚRGUER (MOBILE)
-       ---------------------------------------------------------------------- */
-    const botaoHamburguer = document.getElementById('botao-hamburguer');
-    const menuNavegacao = document.getElementById('menu-navegacao');
-    const linksMenu = document.querySelectorAll('.link-menu');
-
-    function alternarMenuMobile() {
-        menuNavegacao.classList.toggle('ativo');
-        const estaAberto = menuNavegacao.classList.contains('ativo');
-        botaoHamburguer.innerHTML = estaAberto ? '<i class="bi bi-x-lg"></i>' : '<i class="bi bi-list"></i>';
+    // Carrega preferência anterior do usuário
+    const temaSalvo = localStorage.getItem("pref-tema");
+    if (temaSalvo) {
+        elementoCorpo.className = temaSalvo;
     }
 
-    botaoHamburguer.addEventListener('click', alternarMenuMobile);
+    // Evento de clique para o botão de tema
+    botaoAlternarTema.addEventListener("click", alternarTema);
 
-    // Fecha o menu mobile ao clicar em qualquer link
-    linksMenu.forEach(link => {
-        link.addEventListener('click', () => {
-            if (menuNavegacao.classList.contains('ativo')) {
+    /* 3. FUNCIONALIDADE: MENU MOBILE (HAMBÚRGUER) */
+    function alternarMenuMobile() {
+        menuNavegacao.classList.toggle("ativo");
+        const iconeMenu = botaoMenuHamburguer.querySelector("i");
+        iconeMenu.classList.toggle("bi-list");
+        iconeMenu.classList.toggle("bi-x-lg");
+    }
+
+    botaoMenuHamburguer.addEventListener("click", alternarMenuMobile);
+
+    // Fecha o menu ao clicar em qualquer link de navegação
+    linksNavegacao.forEach((link) => {
+        link.addEventListener("click", () => {
+            if (menuNavegacao.classList.contains("ativo")) {
                 alternarMenuMobile();
             }
         });
     });
 
+    /* 4. FUNCIONALIDADE: EFEITO MÁQUINA DE ESCREVER */
+    const frasesMaquina = [
+        "Estudante de Desenvolvimento Full Stack",
+        "Especializando em Front-end Development",
+        "Entusiasta de UI/UX e Web Design"
+    ];
 
-    /* ----------------------------------------------------------------------
-       3. EFEITO MÁQUINA DE ESCREVER (TYPING EFFECT)
-       ---------------------------------------------------------------------- */
-    const elementoTexto = document.getElementById('texto-maquina-escrever');
-    const textoParaEscrever = 'Estudante de Desenvolvimento Full Stack';
+    let indiceFraseAtual = 0;
     let indiceCaractere = 0;
+    let estaDeletando = false;
+    const velocidadeDigitacao = 100;
+    const velocidadeDeletar = 50;
+    const tempoPausa = 2000;
 
-    function efeitoMaquinaEscrever() {
-        if (indiceCaractere < textoParaEscrever.length) {
-            elementoTexto.textContent += textoParaEscrever.charAt(indiceCaractere);
+    function animarMaquinaEscrever() {
+        const textoCompleto = frasesMaquina[indiceFraseAtual];
+
+        if (estaDeletando) {
+            elementoTextoMaquina.textContent = textoCompleto.substring(0, indiceCaractere - 1);
+            indiceCaractere--;
+        } else {
+            elementoTextoMaquina.textContent = textoCompleto.substring(0, indiceCaractere + 1);
             indiceCaractere++;
-            setTimeout(efeitoMaquinaEscrever, 80);
+        }
+
+        let velocidadeAtual = estaDeletando ? velocidadeDeletar : velocidadeDigitacao;
+
+        if (!estaDeletando && indiceCaractere === textoCompleto.length) {
+            velocidadeAtual = tempoPausa;
+            estaDeletando = true;
+        } else if (estaDeletando && indiceCaractere === 0) {
+            estaDeletando = false;
+            indiceFraseAtual = (indiceFraseAtual + 1) % frasesMaquina.length;
+            velocidadeAtual = 500;
+        }
+
+        setTimeout(animarMaquinaEscrever, velocidadeAtual);
+    }
+
+    // Inicia a animação da máquina de escrever
+    animarMaquinaEscrever();
+
+    /* 5. FUNCIONALIDADE: BOTÃO VOLTAR AO TOPO */
+    function gerenciarBotaoTopo() {
+        if (window.scrollY > 300) {
+            botaoVoltarTopo.classList.add("visivel");
+        } else {
+            botaoVoltarTopo.classList.remove("visivel");
         }
     }
 
-    // Inicia a animação de escrita
-    efeitoMaquinaEscrever();
+    window.addEventListener("scroll", gerenciarBotaoTopo);
 
+    botaoVoltarTopo.addEventListener("click", () => {
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth"
+        });
+    });
 
-    /* ----------------------------------------------------------------------
-       4. ANIMAÇÃO AO ROLAR A PÁGINA (SCROLL REVEAL)
-       ---------------------------------------------------------------------- */
-    const elementosParaAnimar = document.querySelectorAll('.animar-scroll');
+    /* 6. FUNCIONALIDADE: ANIMAÇÃO DE REVELAÇÃO (FADE-IN-UP AO SCROLL) */
+    const elementosRevelacao = document.querySelectorAll(".revelacao-suave");
 
-    function verificarScroll() {
+    function verificarScrollRevelacao() {
         const alturaGatilho = window.innerHeight * 0.85;
 
-        elementosParaAnimar.forEach(elemento => {
+        elementosRevelacao.forEach((elemento) => {
             const topoElemento = elemento.getBoundingClientRect().top;
-
             if (topoElemento < alturaGatilho) {
-                elemento.classList.add('visivel');
+                elemento.classList.add("ativo");
             }
         });
     }
 
-    window.addEventListener('scroll', verificarScroll);
-    verificarScroll(); // Executa uma vez no carregamento inicial
+    window.addEventListener("scroll", verificarScrollRevelacao);
+    // Executa uma vez no carregamento para exibir os elementos visíveis
+    verificarScrollRevelacao();
 
-
-    /* ----------------------------------------------------------------------
-       5. BOTÃO VOLTAR AO TOPO
-       ---------------------------------------------------------------------- */
-    const botaoTopo = document.getElementById('botao-topo');
-
-    window.addEventListener('scroll', () => {
-        if (window.scrollY > 300) {
-            botaoTopo.classList.add('visivel');
-        } else {
-            botaoTopo.classList.remove('visivel');
-        }
-    });
-
-    botaoTopo.addEventListener('click', () => {
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-        });
-    });
-
-
-    /* ----------------------------------------------------------------------
-       6. ANO ATUAL DINÂMICO NO RODAPÉ
-       ---------------------------------------------------------------------- */
-    const elementoAno = document.getElementById('ano-atual');
-    if (elementoAno) {
-        elementoAno.textContent = new Date().getFullYear();
+    /* 7. FUNCIONALIDADE: ANO DINÂMICO NO RODAPÉ */
+    if (elementoAnoAtual) {
+        elementoAnoAtual.textContent = new Date().getFullYear();
     }
-
 });
